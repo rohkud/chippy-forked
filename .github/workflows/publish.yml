@@ -1,0 +1,40 @@
+name: Publish Chippy package
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Make Mill executable
+        run: chmod +x ./mill
+
+      - name: Publish chippy to GitHub Packages
+        env:
+          MILL_MAVEN_USERNAME: ${{ github.actor }}
+          MILL_MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./mill 'chippy.publishAll(
+            "https://maven.pkg.github.com/rohkud/chippy-forked",
+            release = true
+          )'
