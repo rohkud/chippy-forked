@@ -34,7 +34,7 @@ jobs:
           MILL_MAVEN_USERNAME: ${{ github.actor }}
           MILL_MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ./mill 'chippy.publishAll(
-            "https://maven.pkg.github.com/rohkud/chippy-forked",
-            release = true
-          )'
+          ./mill mill.javalib.MavenPublishModule/ \
+            --publishArtifacts chippy.publishArtifacts \
+            --releaseUri https://maven.pkg.github.com/rohkud/chippy-forked \
+            --snapshotUri https://maven.pkg.github.com/rohkud/chippy-forked
