@@ -35,6 +35,6 @@ jobs:
           MILL_MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./mill mill.javalib.MavenPublishModule/ \
-            --publishArtifacts chippy.publishArtifacts rocketchip.dependencies.diplomacy.publishArtifacts \
+            --publishArtifacts chippy.publishArtifacts,rocketchip.dependencies.diplomacy.publishArtifacts \
             --releaseUri https://maven.pkg.github.com/rohkud/chippy-forked \
             --snapshotUri https://maven.pkg.github.com/rohkud/chippy-forked
