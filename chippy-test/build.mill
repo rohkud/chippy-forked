@@ -5,10 +5,10 @@ object test extends ScalaModule {
   def scalaVersion = "2.13.16"
 
   def repositories = Seq(
-    MavenRepository("https://maven.pkg.github.com/rohkud/chippy-forked")
+    "https://maven.pkg.github.com/rohkud/chippy-forked"
   )
 
-  def ivyDeps = Agg(
-    ivy"edu.berkeley.cs::chippy:0.0.1"
+  def ivyDeps = Seq(
+    mvn"edu.berkeley.cs::chippy:0.0.1"
   )
 }
