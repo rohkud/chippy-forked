@@ -1,0 +1,90 @@
+name: Deploy API documentation
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  workflow_run:
+    workflows:
+      - "Publish Chippy package"
+    types:
+      - completed
+
+permissions:
+  contents: write
+
+jobs:
+  deploy-api-docs:
+    # Run if not caused by another workflow (i.e. a push to main) or if workflow succeeds (new package version successfully published)
+    if: >
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Chippy repository
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Generate Scaladoc
+        run: |
+          chmod +x ./mill
+          ./mill chippy.docJar
+          ./mill chipyard.docJar
+          ./mill rocketchip.docJar
+          ./mill rocketchip.dependencies.diplomacy.docJar
+          ./mill rocketchip.dependencies.cde.docJar
+          ./mill rocketchip.dependencies.hardfloat.docJar
+          ./mill constellation.docJar
+          ./mill testchipip.docJar
+
+      - name: Copy Scaladoc into API site
+        run: |
+          mkdir -p api
+          rm -rf api/*
+
+          find out -name "*.jar" | grep docJar | while read jar; do
+            module=$(basename "$(dirname "$(dirname "$jar")")")
+            mkdir -p "api/$module"
+            unzip -q "$jar" -d "api/$module" || true
+          done
+
+      - name: Create API index page
+        run: |
+          cat > api/index.html <<'EOF'
+          <html>
+          <head>
+            <title>Chippy API Documentation</title>
+          </head>
+          <body>
+            <h1>Chippy API Documentation</h1>
+            <p>Generated Scaladoc API documentation for Chippy modules.</p>
+            <ul>
+              <li><a href="./cde/">CDE</a></li>
+              <li><a href="./chippy/">Chippy</a></li>
+              <li><a href="./chipyard/">Chipyard</a></li>
+              <li><a href="./rocketchip/">Rocket Chip</a></li>
+              <li><a href="./diplomacy/">Diplomacy</a></li>
+              <li><a href="./hardfloat/">Hardfloat</a></li>
+              <li><a href="./constellation/">Constellation</a></li>
+              <li><a href="./testchipip/">TestChipIP</a></li>
+            </ul>
+          </body>
+          </html>
+          EOF
+
+      - name: Deploy API docs to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: api
+          destination_dir: api
